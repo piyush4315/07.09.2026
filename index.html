@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MSTC Limited • Live Search</title>
+  <style>
+    :root {
+      --navy: #162c4b;
+      --navy-2: #203f67;
+      --blue: #2878b9;
+      --blue-soft: #eaf4fc;
+      --yellow: #fff4b8;
+      --yellow-strong: #ffe15c;
+      --ink: #1f2f43;
+      --muted: #64748b;
+      --line: #d8e1eb;
+      --panel: #ffffff;
+      --canvas: #f3f7fb;
+      --green: #0d7c5b;
+      --green-soft: #e6f6ef;
+      --red: #b42318;
+      --red-soft: #fff0ed;
+      --grey-soft: #f1f3f5;
+      --shadow: 0 14px 34px rgba(25, 54, 88, .10);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html { min-width: 1080px; background: var(--canvas); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 0 0, rgba(55, 135, 196, .12), transparent 32rem),
+        var(--canvas);
+      font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell { max-width: 1900px; margin: 0 auto; padding: 26px 28px 42px; }
+    .topbar { display: flex; justify-content: space-between; gap: 22px; align-items: flex-start; margin-bottom: 20px; }
+    .eyebrow { margin: 0 0 5px; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0; color: var(--navy); font-size: clamp(25px, 3vw, 40px); line-height: 1.08; letter-spacing: -.03em; }
+    .subtitle { max-width: 900px; margin: 10px 0 0; color: var(--muted); font-size: 15px; }
+    .lot-badge { flex: 0 0 auto; padding: 10px 14px; border: 1px solid #bfd6e9; border-radius: 999px; background: rgba(255,255,255,.78); color: var(--navy); font-weight: 750; box-shadow: 0 5px 18px rgba(25,54,88,.06); }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab { border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.72); color: var(--muted); padding: 9px 16px; font-weight: 750; transition: .18s ease; }
+    .tab:hover { border-color: #9dbbd5; color: var(--navy); }
+    .tab.active { border-color: var(--navy); background: var(--navy); color: white; box-shadow: 0 6px 14px rgba(22,44,75,.18); }
+    .view.hidden { display: none; }
+    .panel { border: 1px solid rgba(192, 207, 222, .9); border-radius: var(--radius); background: rgba(255,255,255,.9); box-shadow: var(--shadow); }
+    .search-panel { display: grid; grid-template-columns: minmax(330px, 1.65fr) minmax(230px, .8fr) minmax(250px, 1fr) auto; gap: 13px; align-items: end; padding: 18px; }
+    .field { min-width: 0; }
+    label { display: block; margin: 0 0 6px; color: var(--navy); font-size: 11px; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; }
+    .control { width: 100%; min-height: 42px; border: 1px solid #b7c8d9; border-radius: 10px; background: white; color: var(--ink); padding: 9px 12px; outline: none; transition: border-color .15s, box-shadow .15s, background .15s; }
+    .control:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(40,120,185,.14); }
+    .search-input { border-color: #a88b00; background: var(--yellow); font-size: 16px; font-weight: 650; }
+    .field-hint { min-height: 19px; margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .metric { min-height: 42px; display: flex; flex-direction: column; justify-content: center; padding: 7px 12px; border: 1px solid #c6d9e8; border-radius: 10px; background: var(--blue-soft); }
+    .metric strong { color: var(--navy); font-size: 20px; line-height: 1; }
+    .metric span { margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .actions { display: flex; gap: 8px; align-items: end; }
+    .btn { min-height: 42px; border: 1px solid #afc3d5; border-radius: 10px; background: white; color: var(--navy); padding: 9px 13px; font-weight: 750; white-space: nowrap; }
+    .btn:hover { border-color: var(--blue); background: var(--blue-soft); }
+    .btn.primary { border-color: var(--navy); background: var(--navy); color: white; }
+    .btn.primary:hover { background: var(--navy-2); }
+    .status-line { margin: 12px 3px 0; color: var(--muted); font-size: 13px; }
+    .status-line strong { color: var(--navy); }
+    .column-panel { margin-top: 16px; overflow: hidden; }
+    .column-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: linear-gradient(90deg, #fbfdff, #f5faff); }
+    .section-title { margin: 0; color: var(--navy); font-size: 14px; font-weight: 850; }
+    .section-help { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .outline-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+    .outline-chip { border: 1px solid #bfd0df; border-radius: 999px; background: white; color: var(--navy-2); padding: 6px 10px; font-size: 11px; font-weight: 800; }
+    .outline-chip:hover { border-color: var(--blue); background: var(--blue-soft); }
+    .table-scroll { max-height: 69vh; overflow: auto; overscroll-behavior: contain; background: white; }
+    table { border-collapse: separate; border-spacing: 0; table-layout: fixed; min-width: 3430px; width: 100%; }
+    th, td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 8px 9px; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
+    th:first-child, td:first-child { border-left: 1px solid var(--line); }
+    .outline-row th { position: sticky; top: 0; z-index: 5; height: 42px; padding: 5px 7px; border-top: 1px solid var(--line); background: var(--navy); color: white; text-align: center; }
+    .outline-row .group-band { background: #1d4d79; }
+    .outline-row .plain-band { color: #b9cee2; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+    .group-toggle { width: 100%; border: 1px solid rgba(255,255,255,.24); border-radius: 8px; background: rgba(255,255,255,.1); color: white; padding: 5px 7px; font-size: 11px; font-weight: 800; line-height: 1.15; }
+    .group-toggle:hover { background: rgba(255,255,255,.22); }
+    .filter-row th { position: sticky; top: 42px; z-index: 4; height: 55px; padding: 6px; background: #f8fbfe; }
+    .filter-row input { width: 100%; min-width: 0; height: 35px; border: 1px solid #d0bf4a; border-radius: 7px; background: var(--yellow); color: var(--navy); padding: 6px 7px; font-size: 11px; outline: none; }
+    .filter-row input::placeholder { color: #867927; opacity: .8; }
+    .filter-row input:focus { border-color: #9b7900; box-shadow: 0 0 0 2px rgba(255,225,92,.42); }
+    .header-row th { position: sticky; top: 97px; z-index: 4; height: 64px; background: var(--navy-2); color: white; font-size: 11px; line-height: 1.2; text-align: center; white-space: normal; }
+    tbody td { height: 34px; background: white; color: #26384d; font-size: 12px; white-space: nowrap; }
+    tbody tr.data-row:hover td { background: #f5fbff; }
+    tbody tr.data-row:nth-child(even) td { background: #fbfdff; }
+    tbody tr.data-row:nth-child(even):hover td { background: #f1f9ff; }
+    tbody tr.remaining-data td { background: #f3f4f5 !important; color: #737b83; }
+    tbody tr.remaining-data:hover td { background: #eceff1 !important; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .center { text-align: center; }
+    .lot-name, .buyer { white-space: normal; line-height: 1.25; }
+    .blank-value { color: #b3bdc8; font-size: 14px; }
+    .status-settled { color: var(--green); font-weight: 800; }
+    .status-outstanding { color: var(--red); font-weight: 800; }
+    .outstanding-positive { color: var(--red); font-weight: 750; }
+    .summary-row td { background: #eaf2fa; color: #1b3859; font-weight: 800; }
+    .summary-row.total-matched td { background: #dceeff; color: #12466e; }
+    .summary-row.remaining td { background: #eef0f2; color: #6c737a; }
+    .summary-row.grand-total td { background: var(--green-soft); color: #126049; border-bottom: 2px solid #83c9ae; }
+    .summary-row td:first-child { font-size: 17px; text-align: center; }
+    .hidden-col { display: none !important; }
+    .source-panel { padding: 0; overflow: hidden; }
+    .source-intro { padding: 16px 18px; border-bottom: 1px solid var(--line); }
+    .source-table-scroll { max-height: 72vh; overflow: auto; }
+    .source-table { min-width: 2700px; }
+    .source-table thead th { position: sticky; top: 0; z-index: 2; background: var(--navy); color: white; font-size: 11px; white-space: normal; }
+    .source-table tbody td { background: white; }
+    .source-table tbody tr:nth-child(even) td { background: #fbfdff; }
+    .info-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .info-card { min-height: 124px; padding: 15px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.82); }
+    .info-card h3 { margin: 0 0 7px; color: var(--navy); font-size: 13px; }
+    .info-card p { margin: 0; color: var(--muted); font-size: 12px; }
+    .token { display: inline-block; margin: 2px 2px 0 0; padding: 1px 5px; border-radius: 5px; background: #e9f2fb; color: #175584; font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    footer { margin-top: 22px; color: #7c8a99; font-size: 11px; }
+    @media (max-width: 1250px) {
+      .search-panel { grid-template-columns: 1fr 1fr; }
+      .actions { align-items: stretch; }
+      .info-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MSTC LIMITED • COMBINED BID SHEET</p>
+        <h1>Live Search</h1>
+        <p class="subtitle">Search, facet, filter and group the 37 live-linked lots. The browser view mirrors the workbook's Live Search sheet, including wildcard fields, blank matching, totals and outline groups.</p>
+      </div>
+      <div class="lot-badge">37 lots · live data view</div>
+    </header>
+
+    <nav class="tabs" aria-label="Workbook sheets">
+      <button class="tab active" data-view="liveView">Live Search</button>
+      <button class="tab" data-view="sourceView">Final Calculation Sheet</button>
+    </nav>
+
+    <section id="liveView" class="view">
+      <section class="panel search-panel" aria-label="Live search controls">
+        <div class="field">
+          <label for="mainSearch">Search</label>
+          <input id="mainSearch" class="control search-input" value="drum, barrel" autocomplete="off" spellcheck="false" aria-describedby="mainHint">
+          <div id="mainHint" class="field-hint">Comma or / = ANY · + or &amp; = ALL facets · up to 8 values</div>
+        </div>
+        <div class="field">
+          <label for="searchIn">Search in</label>
+          <select id="searchIn" class="control">
+            <option>Lot No. + Buyer + Name</option>
+            <option>Lot No.</option>
+            <option>Buyer</option>
+            <option>Lot Name</option>
+            <option>Bid Sheet</option>
+            <option>Unit</option>
+          </select>
+          <div class="field-hint">The text field used by the main search</div>
+        </div>
+        <div class="field">
+          <label>Matches</label>
+          <div class="metric"><strong id="matchCount">0 of 37</strong><span id="matchSubtext">recalculating live</span></div>
+        </div>
+        <div class="actions">
+          <button id="resetButton" class="btn primary" type="button">Reset filters</button>
+        </div>
+      </section>
+      <p id="statusLine" class="status-line" aria-live="polite"></p>
+
+      <section class="panel column-panel">
+        <div class="column-panel-head">
+          <div>
+            <h2 class="section-title">Column search fields</h2>
+            <p class="section-help">Type above any header. Fields in different columns combine as ALL; comma or / inside one field means ANY.</p>
+          </div>
+          <div id="outlineTools" class="outline-tools" aria-label="Column outline groups"></div>
+        </div>
+        <div class="table-scroll">
+          <table id="resultsTable" aria-label="Live search results">
+            <thead>
+              <tr id="outlineRow" class="outline-row"></tr>
+              <tr id="filterRow" class="filter-row"></tr>
+              <tr id="headerRow" class="header-row"></tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="info-grid" aria-label="Search help">
+        <article class="info-card">
+          <h3>ANY / wildcard</h3>
+          <p>Use <span class="token">1874, 1923</span> or <span class="token">1874 / 1923</span>. Use <span class="token">*</span> for any text and <span class="token">?</span> for one character.</p>
+        </article>
+        <article class="info-card">
+          <h3>ALL facets</h3>
+          <p>Use <span class="token">NATIONAL + COPPER</span> or <span class="token">NATIONAL &amp; COPPER</span>. A lot must match every facet.</p>
+        </article>
+        <article class="info-card">
+          <h3>Find empty cells</h3>
+          <p>Enter <span class="token">BLANK</span>, <span class="token">(blank)</span>, <span class="token">EMPTY</span> or <span class="token">(empty)</span> in a search field. A completely empty field still means “ignore”.</p>
+        </article>
+        <article class="info-card">
+          <h3>Outline groups</h3>
+          <p>Use the outline chips or the dark group buttons to collapse details: lot details, GST/TCS, service charges, GST TDS rate, security deposit, final payment and LPP expected.</p>
+        </article>
+      </section>
+    </section>
+
+    <section id="sourceView" class="view hidden">
+      <section class="panel source-panel">
+        <div class="source-intro">
+          <h2 class="section-title">Final Calculation Sheet</h2>
+          <p class="section-help">The source values behind the Live Search view. The search page reads these 37 lots without changing the source data.</p>
+        </div>
+        <div class="source-table-scroll">
+          <table id="sourceTable" class="source-table" aria-label="Final Calculation Sheet source data">
+            <thead><tr id="sourceHeaderRow"></tr></thead>
+            <tbody id="sourceBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <footer>Standalone HTML mirror of 07.09.2026.xlsx · Search and grouping run locally in your browser.</footer>
+  </main>
+
+  <script>
+    const SOURCE_DATA = {"headers":["Quantity","1876, 1923, national e ","Rate","Bid Sheet","Unit","Lot No.","Buyer","Mat. Value","GST","Mat. Value + GST","TCS","TDS u/s 194(O)","Service Charge\nto MSTC","TDS u/s 194(H)","Net Service Charge\n(post TDS 194H)","Service charge to MSTC","GST TDS Rate","GST TDS","Total Receivables in Cash","Security Deposit (Expected)","Security Deposit (Received)","Date of Receipt","Final Payment (Expected)","Final Payment (Received)","Date of Receipt","LPP Expected","LPP Received","Date of Recepit of LPP","Total Received","Outstanding","Invoice No. ","SAP Document","Doc./Invoice Date"],"rows":[["669","Lot No.","1181","21980","KG","1763","AL HAMD TRADE CORPORATION","790089","142216","932305","18646","790.08900000000006","20976.862949999999","355.54005000000001","20621.322899999999","21411","0.02","15802","913738","197522","197522","24.08.2026","716215","716216","18.08.2026","0","","","913738","0","DR2640100029","1800003271","24.08.2026"],["270","Scrap of Empty oil drum","580","21977","NO","1874","NATIONAL ENTERPRISES","156600","28188","184788","3696","156.6","4157.7299999999996","70.47","4087.2599999999998","4244","0","0","184240","39150","39150","13.08.2026","145090","145090","24.08.2026","0","","","184240","0","DR2640100030","1800003302","27.08.2026"],["28","Scrap of Copper of faulty AC compressor","1456","21977","KG","1875","F R KHANS ENTERPRISES","40768","7338","48106","962","40.768000000000001","1082.3904","18.345600000000001","1064.0447999999999","1105","0","0","47964","10192","10192","11.08.2026","37772","37772","20.08.2026","0","","","47964","0","DR2640100047","1800003346","27.08.2026"],["3000","Scrap of MS (extracted from equip cage and empty Sf6 gas cylinder)","66","21977","KG","1876","F R KHANS ENTERPRISES","198000","35640","233640","4673","198","5256.9","89.100000000000009","5167.7999999999993","5366","0","0","232947","49500","49500","11.08.2026","183447","183446","20.08.2026","0","","","232946","1","DR2640100048","1800003347","27.08.2026"],["7253","SCRAP ACSR CONDUCTORS (Conductor Pieces)","227","21980","KG","1923","OMKAR STEELS","1646431","296358","1942789","38856","1646.431","43712.743049999997","740.89395000000002","42971.849099999999","44618","0.02","32929","1904097","411608","411608","14.08.2026","1492489","1492490","24.08.2026","0","","","1904098","-1","DR2640100045","1800003315","27.08.2026"],["1","Scrap Power Transformer","2787314","21977","NO","1976","SHAR JAHAN TRADERS","2787314","501717","3289031","65781","2787.3139999999999","74003.186699999991","1254.2912999999999","72748.895399999994","75536","0","0","3279275","696829","696829","13.08.2026","2582446","2582447.0942916102","13.08.2026","0","","","3279276.0942916102","-1.0942916101776063","DR2640100023","1800003194","17.08.2026"],["4","Scrap of 132 KV CT","51511","21977","NO","2002","NATIONAL ENTERPRISES","206044","37088","243132","4863","206.04400000000001","5470.4681999999993","92.719799999999992","5377.7483999999995","5584","0","0","242411","51511","51511","13.08.2026","190900","190900","24.08.2026","0","","","242411","0","DR2640100031","1800003303","27.08.2026"],["1","Scrap of 145 KV CB","65007","21977","NO","2003","NATIONAL ENTERPRISES","65007","11701","76708","1534","65.007000000000005","1725.9358499999998","29.253150000000002","1696.6826999999998","1762","0","0","76481","16252","16252","13.08.2026","60229","60229","24.08.2026","0","","","76481","0","DR2640100032","1800003304","27.08.2026"],["1","Scrap of 220KV CT","70006","21977","NO","2005","NATIONAL ENTERPRISES","70006","12601","82607","1652","70.006","1858.6592999999998","31.502700000000001","1827.1565999999998","1897","0","0","82362","17502","17502","13.08.2026","64861","64859","24.08.2026","0","","","82361","1","DR2640100033","1800003305","27.08.2026"],["25","Scrap of empty oil drums","700","21977","NO","2006","STERLING ENTERPRISES","17500","3150","20650","413","17.5","464.625","7.875","456.75","474","0","0","20589","4375","4375","11.08.2026","16214","16214","11.08.2026","0","","","20589","0","DR2640100018","1800003156","14.08.2026"],["1","SCRAP POWER TRANSFORMER","3857116","21977","NO","2007","SHAR JAHAN TRADERS","3857116","694281","4551397","91028","3857.116","102406.4298","1735.7021999999999","100670.7276","104528","0","0","4537897","964279","964279","13.08.2026","3573618","3573618.9057083898","13.08.2026","0","","","4537897.9057083894","-0.90570838935673237","DR2640100024","1800003196","17.08.2026"],["250","Scrap of empty oil Druam","543","21977","NO","2008","HIND TRADERS","135750","24435","160185","3204","135.75","3604.1624999999999","61.087499999999999","3543.0749999999998","3679","0","0","159710","33938","33938","14.08.2026","125772","125772","18.08.2026","0","","","159710","0","DR2640100026","1800003247","20.08.2026"],["22","Scrap of empty oil Barrel","700","21977","NO","2011","STERLING ENTERPRISES","15400","2772","18172","363","15.4","408.87","6.93","401.94","417","0","0","18118","3850","3850","11.08.2026","14268","14267","11.08.2026","0","","","18117","1","DR2640100019","1800003157","14.08.2026"],["100","Scrap of empty oil Barrels","710","21978","NO","2015","STERLING ENTERPRISES","71000","12780","83780","1676","71","1885.05","31.95","1853.1","1924","0","0","83532","17750","17750","11.08.2026","65782","65782","11.08.2026","0","","","83532","0","DR2640100020","1800003158","14.08.2026"],["1","Scrap of 220 KV Circuit Breaker","220001","21978","NO","2018","NATIONAL ENTERPRISES","220001","39600","259601","5192","220.001","5841.0265499999996","99.000450000000001","5742.0260999999991","5962","0","0","258831","55000","55000","13.08.2026","203831","203831","24.08.2026","0","","","258831","0","DR2640100034","1800003306","27.08.2026"],["1","Scrap of 220 KV Circuit Breaker","210001","21978","NO","2019","NATIONAL ENTERPRISES","210001","37800","247801","4956","210.001","5575.5265499999996","94.500450000000001","5481.0260999999991","5691","0","0","247066","52500","52500","13.08.2026","194566","194566","24.08.2026","0","","","247066","0","DR2640100035","1800003307","27.08.2026"],["3500","SCRAP 80MM² AAAC EARTHWIRE","333","21978","KG","2020","OMKAR STEELS","1165500","209790","1375290","27506","1165.5","30944.024999999998","524.47500000000002","30419.55","31585","0.02","23310","1347901","291375","291375","10.08.2026","1056526","1056525","10.08.2026","0","","","1347900","1","DR2640100017","1800003065","12.08.2026"],["3","Scrap of 132 KV CT","110200","21978","NO","2022","NATIONAL SCRAP AND BUILDING MATERIAL SUPPLIER","330600","59508","390108","7802","330.6","8777.43","148.77000000000001","8628.66","8959","0","0","388951","82650","82650","14.08.2026","306301","306301","21.08.2026","0","","","388951","0","DR2640100028","1800003269","24.08.2026"],["3","Scrap of 132 KV CT","83743","21978","NO","2023","NATIONAL ENTERPRISES","251229","45221","296450","5929","251.22900000000001","6670.1299499999996","113.05305","6557.0768999999991","6808","0","0","295571","62807","62807","13.08.2026","232764","232764","24.08.2026","0","","","295571","0","DR2640100044","1800003308","27.08.2026"],["90","Scrap of empty oil Barrels","700","21978","NO","2025","STERLING ENTERPRISES","63000","11340","74340","1487","63","1672.6499999999999","28.35","1644.3","1707","0","0","74120","15750","15750","11.08.2026","58370","58418","11.08.2026","0","","","74168","-48","DR2640100021","1800003160","14.08.2026"],["1","Scrap of 132 KV CT","50003","21978","NO","2027","NATIONAL ENTERPRISES","50003","9001","59004","1180","50.003","1327.5796499999999","22.501349999999999","1305.0782999999999","1355","0","0","58829","12501","12501","13.08.2026","46328","46328","24.08.2026","0","","","58829","0","DR2640100036","1800003309","27.08.2026"],["1000","Scrap Empty Oil Drum/ Barrel","517","21978","NO","2033","WATAN SCRAP TRADERS","517000","93060","610060","12201","517","13726.349999999999","232.65","13493.699999999999","14011","0","0","608251","129250","129250","14.08.2026","479001","479001","21.08.2026","0","","","608251","0","DR2640100042","1800003317","27.08.2026"],["2","Scrap of 132 KV Wave Trap","14001","21978","NO","2035","NATIONAL ENTERPRISES","28002","5040","33042","661","28.001999999999999","743.45309999999995","12.600899999999999","730.85219999999993","759","0","0","32944","7001","7001","13.08.2026","25944","25943","24.08.2026","0","","","32944","0","DR2640100037","1800003310","27.08.2026"],["8.1999999999999993","Mix Scrap (Tower angles & 0.2 ACSR Condutor pieces)","67000","21978","MT","2036","M I SCRAP TRADERS","549400","98892","648292","12966","549.4","14586.57","247.23000000000002","14339.34","14889","0.02","10988","635381","137350","137350","14.08.2026","498031","","0","19448.760000000002","","","137350","498031","","",""],["50","Scrap of empty oil Barrels","531","21978","NO","2037","WATAN SCRAP TRADERS","26550","4779","31329","627","26.55","704.90249999999992","11.9475","692.95499999999993","720","0","0","31236","6638","6638","14.08.2026","24599","24598","21.08.2026","0","","","31236","0","DR2640100043","1800003318","27.08.2026"],["3","Scrap of 33 KV CT","90002","21978","NO","2040","STERLING ENTERPRISES","270006","48601","318607","6372","270.00600000000003","7168.6593000000003","121.5027","7047.1566000000003","7317","0","0","317662","67502","67502","11.08.2026","250161","","0","9558.2124000000003","","","67502","250160","","",""],["5","Scrap of 132 KV CT","80000","21979","NO","2043","NATIONAL ENTERPRISES","400000","72000","472000","9440","400","10620","180","10440","10840","0","0","470600","100000","100000","13.08.2026","370600","370600","24.08.2026","0","","","470600","0","DR2640100038","1800003311","27.08.2026"],["670","Scrap of AAAC Earth wire","309","21979","KG","2046","SAHARA ENTERPRISES","207030","37265","244295","4886","207.03","5496.6464999999998","93.163499999999999","5403.4830000000002","5611","0","0","243571","51758","51758","11.08.2026","191813","191812","21.08.2026","0","","","243570","1","DR2640100041","1800003316","27.08.2026"],["2","Scrap of 220 KV CT","80006","21979","NO","2055","NATIONAL ENTERPRISES","160012","28802","188814","3776","160.012","4248.3185999999996","72.005399999999995","4176.3131999999996","4336","0","0","188254","40003","40003","13.08.2026","148251","148251","24.08.2026","0","","","188254","0","DR2640100039","1800003312","27.08.2026"],["1","Scrap of 33 KV GCB","29502","21979","NO","2059","NATIONAL ENTERPRISES","29502","5310","34812","696","29.501999999999999","783.27809999999988","13.2759","770.0021999999999","800","0","0","34709","7376","7376","13.08.2026","27334","27332","24.08.2026","0","","","34708","1","DR2640100046","1800003313","27.08.2026"],["30","Scrap of Empty oil Barrels","702","21979","NO","2062","STERLING ENTERPRISES","21060","3791","24851","497","21.06","559.14299999999992","9.4770000000000003","549.66599999999994","571","0","0","24777","5265","5265","11.08.2026","19512","19512","11.08.2026","0","","","24777","0","DR2640100022","1800003161","14.08.2026"],["150","Scrap of empty oil drums","571","21980","NO","2067","WATAN SCRAP TRADERS","85650","15417","101067","2021","85.65","2274.0074999999997","38.542500000000004","2235.4649999999997","2321","0","0","100767","21413","21413","14.08.2026","79355","79354","20.08.2026","0","","","100767","0","DR2640100027","1800003248","20.08.2026"],["1","Scrap of 33 KV CB","54000","21980","NO","2069","STERLING ENTERPRISES","54000","9720","63720","1274","54","1433.6999999999998","24.3","1409.3999999999999","1463","0","0","63531","13500","13500","11.08.2026","50031","","0","1911.6","","","13500","50031","","",""],["3","Scrap of 66 KV Isolater","25001","21980","NO","2071","NATIONAL ENTERPRISES","75003","13501","88504","1770","75.003","1991.3296499999997","33.751349999999995","1957.5782999999997","2033","0","0","88241","18751","18751","13.08.2026","69490","69491","24.08.2026","0","","","88242","-1","DR2640100040","1800003314","27.08.2026"],["3","Scrap of 132 KV CT","70001","21980","NO","2086","KASHYAP TRADING CO","210003","37801","247804","4956","210.00300000000001","5575.5796499999997","94.501350000000002","5481.0782999999992","5691","0","0","247069","52501","52501","17.08.2026","194568","194568","17.08.2026","0","","","247069","0","DR2640100025","1800003226","19.08.2026"],["2","Scrap of 66 kv TBC C & R Panel","15006","21980","NO","2089","S M ENTERPRISES","30012","5402","35414","708","30.012","796.81859999999995","13.5054","783.31319999999994","813","0","0","35309","7503","7503","14.08.2026","27806","27806","01.09.2026","708.28319999999997","708","01.09.2026","36017","-708","","",""],["3","Scrap of 132 KV CT","40003","21980","NO","2091","S M ENTERPRISES","120009","21602","141611","2832","120.009","3186.2389499999995","54.004049999999999","3132.2348999999995","3252","0","0","141191","30002","30002","14.08.2026","111188","111189","01.09.2026","2832.2123999999999","2832","01.09.2026","144023","-2832","","",""]]};
+
+    const LIVE_HEADERS = [
+      '#', 'Lot No.', 'Buyer', 'Lot Name', 'Bid Sheet', 'Quantity', 'Unit', 'Rate',
+      'Mat. Value', 'GST', 'Mat. Value + GST', 'TCS', 'TDS u/s 194(O)',
+      'Service Charge to MSTC', 'TDS u/s 194(H)', 'Net Service Charge (post TDS 194H)',
+      'Service charge to MSTC', 'GST TDS Rate', 'GST TDS', 'Total Receivables in Cash',
+      'Security Deposit (Expected)', 'Security Deposit (Received)', 'Date of Receipt (col V)',
+      'Final Payment (Expected)', 'Final Payment (Received)', 'Date of Receipt (col Y)',
+      'LPP Expected', 'LPP Received', 'Date of Receipt of LPP', 'Total Received',
+      'Outstanding', 'Invoice No.', 'SAP Document', 'Doc./Invoice Date', 'Payment Status'
+    ];
+    const SOURCE_TO_LIVE = [null, 5, 6, 1, 3, 0, 4, 2, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, null];
+    const SEARCH_FIELDS = {
+      'Lot No.': [1],
+      'Buyer': [2],
+      'Lot Name': [3],
+      'Bid Sheet': [4],
+      'Unit': [6],
+      'Lot No. + Buyer + Name': [1, 2, 3]
+    };
+    const NUMERIC_COLUMNS = new Set([0, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 23, 24, 26, 27, 29, 30]);
+    const PERCENT_COLUMNS = new Set([17]);
+    const SUM_COLUMNS = new Set([5, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 23, 24, 26, 27, 29, 30]);
+    const BLANK_TOKENS = new Set(['blank', '(blank)', 'empty', '(empty)']);
+
+    // These outline groups mirror the final workbook's expandable column groups.
+    const COLUMN_GROUPS = [
+      { id: 'lotDetails', label: 'Lot Name → Rate', cols: [3, 4, 5, 6, 7], summary: 'Buyer' },
+      { id: 'gstValue', label: 'GST / Total / TCS', cols: [9, 10, 11], summary: 'Mat. Value' },
+      { id: 'serviceCharges', label: 'TDS / Service Charges', cols: [12, 13, 14, 15], summary: 'Service charge' },
+      { id: 'gstTdsRate', label: 'GST TDS Rate', cols: [17], summary: 'GST TDS' },
+      { id: 'securityExpected', label: 'Security Deposit (Expected)', cols: [20], summary: 'Security Deposit Received' },
+      { id: 'finalExpected', label: 'Final Payment (Expected)', cols: [23], summary: 'Final Payment Received' },
+      { id: 'lppExpected', label: 'LPP Expected', cols: [26], summary: 'LPP Received' }
+    ];
+    const collapsedGroups = new Set();
+    const liveRows = SOURCE_DATA.rows.map((source, rowIndex) => {
+      const values = SOURCE_TO_LIVE.map((sourceIndex, liveIndex) => {
+        if (liveIndex === 0) return String(rowIndex + 1);
+        if (liveIndex === 34) return toNumber(source[29]) <= 0 ? 'SETTLED' : 'OUTSTANDING';
+        return source[sourceIndex] ?? '';
+      });
+      return { id: rowIndex + 1, values, source };
+    });
+
+    const $ = (id) => document.getElementById(id);
+    const mainSearch = $('mainSearch');
+    const searchIn = $('searchIn');
+    const filterValues = new Array(LIVE_HEADERS.length).fill('');
+
+    function toNumber(value) {
+      const n = Number(String(value ?? '').replace(/,/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    }
+    function isBlankValue(value) {
+      return String(value ?? '').trim() === '';
+    }
+    function isBlankToken(token) {
+      return BLANK_TOKENS.has(String(token ?? '').trim().toLowerCase());
+    }
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, (ch) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[ch]);
+    }
+    function formatNumber(value, percent = false) {
+      const n = toNumber(value);
+      if (percent) return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(n * 100)}%`;
+      return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(n);
+    }
+    function displayValue(value, columnIndex, source = false) {
+      if (isBlankValue(value)) return '<span class="blank-value" title="Blank">·</span>';
+      const numericString = /^-?\d+(\.\d+)?$/.test(String(value).trim());
+      if (!source && PERCENT_COLUMNS.has(columnIndex) && numericString) return formatNumber(value, true);
+      if ((!source && NUMERIC_COLUMNS.has(columnIndex) && numericString) || (source && numericString)) {
+        return formatNumber(value, false);
+      }
+      return escapeHtml(value).replace(/\n/g, '<br>');
+    }
+    function splitAny(text) {
+      return String(text ?? '').replace(/\//g, ',').split(',').map((part) => part.trim()).filter(Boolean).slice(0, 8);
+    }
+    function parseGlobal(text) {
+      const normalized = String(text ?? '').replace(/\//g, ',').replace(/&/g, '+');
+      const facets = normalized.split('+').map(splitAny).filter((facet) => facet.length);
+      return { facets, terms: facets.flat() };
+    }
+    function wildcardRegex(token) {
+      let pattern = '';
+      for (let i = 0; i < token.length; i += 1) {
+        const ch = token[i];
+        if (ch === '~' && i + 1 < token.length && ['*', '?', '~'].includes(token[i + 1])) {
+          pattern += token[i + 1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          i += 1;
+        } else if (ch === '*') pattern += '.*';
+        else if (ch === '?') pattern += '.';
+        else pattern += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+      return new RegExp(pattern, 'i');
+    }
+    function tokenMatches(token, value) {
+      const term = String(token ?? '').trim();
+      const text = String(value ?? '');
+      if (!term) return false;
+      if (isBlankToken(term)) return isBlankValue(text);
+      if (term.includes('*') || term.includes('?')) return wildcardRegex(term).test(text);
+      return text.toLocaleLowerCase().includes(term.toLocaleLowerCase());
+    }
+    function rowMatchesToken(row, token) {
+      return SEARCH_FIELDS[searchIn.value].some((index) => tokenMatches(token, row.values[index]));
+    }
+    function rowMatchesGlobal(row, parsed) {
+      if (!parsed.facets.length) return true;
+      return parsed.facets.every((facet) => facet.some((term) => rowMatchesToken(row, term)));
+    }
+    function rowMatchesColumnFilter(row, index, filter) {
+      if (!String(filter ?? '').trim()) return true;
+      return splitAny(filter).some((term) => tokenMatches(term, row.values[index]));
+    }
+    function activeColumnFilters() {
+      return filterValues.some((value) => String(value).trim() !== '');
+    }
+    function firstMatchingTerm(row, terms) {
+      return terms.findIndex((term) => rowMatchesToken(row, term));
+    }
+
+    function summaryValues(kind, label, rows) {
+      const values = new Array(LIVE_HEADERS.length).fill('–');
+      values[0] = '∑';
+      values[1] = '';
+      values[2] = `${rows.length} lot(s)`;
+      values[3] = label;
+      for (const index of SUM_COLUMNS) values[index] = rows.reduce((total, row) => total + toNumber(row.values[index]), 0);
+      values[34] = rows.reduce((total, row) => total + toNumber(row.values[30]), 0) <= 0 ? 'ALL SETTLED' : 'OUTSTANDING';
+      return { kind: 'summary', summaryKind: kind, values };
+    }
+    function buildResultRows() {
+      const parsed = parseGlobal(mainSearch.value);
+      const columnActive = activeColumnFilters();
+      const states = liveRows.map((row) => {
+        const columnOk = filterValues.every((filter, index) => rowMatchesColumnFilter(row, index, filter));
+        const globalOk = rowMatchesGlobal(row, parsed);
+        return { row, matched: columnOk && globalOk };
+      });
+      const matched = states.filter((state) => state.matched).map((state) => state.row);
+      const remaining = states.filter((state) => !state.matched).map((state) => state.row);
+      const output = [];
+
+      if (parsed.terms.length) {
+        parsed.terms.forEach((term, termIndex) => {
+          const groupRows = matched.filter((row) => firstMatchingTerm(row, parsed.terms) === termIndex);
+          if (!groupRows.length) return;
+          output.push(...groupRows.map((row) => ({ kind: 'data', row })));
+          output.push(summaryValues('group', `GROUP ${termIndex + 1} TOTAL — lots matching ${term}`, groupRows));
+        });
+      } else {
+        const label = columnActive ? 'FILTERED LOTS — column fields' : 'ALL LOTS — nothing typed in the box';
+        output.push(...matched.map((row) => ({ kind: 'data', row })));
+        output.push(summaryValues('all', label, matched));
+      }
+
+      if (parsed.terms.length || columnActive) {
+        output.push(summaryValues('total-matched', 'TOTAL MATCHED — every group together', matched));
+        if (remaining.length) {
+          output.push(...remaining.map((row) => ({ kind: 'data', row, remaining: true })));
+          output.push(summaryValues('remaining', 'REMAINING — did not match the search', remaining));
+        }
+        output.push(summaryValues('grand-total', 'GRAND TOTAL — matching + remaining', liveRows));
+      }
+      return { output, matchedCount: matched.length, total: liveRows.length, parsed, columnActive };
+    }
+
+    function renderCell(value, index, extraClass = '') {
+      let classes = extraClass;
+      if ([0, 5, 7].includes(index) || NUMERIC_COLUMNS.has(index)) classes += ' num';
+      if ([0, 1, 4, 6, 17, 34].includes(index)) classes += ' center';
+      if ([2, 3].includes(index)) classes += index === 2 ? ' buyer' : ' lot-name';
+      if (index === 30 && toNumber(value) > 0) classes += ' outstanding-positive';
+      if (index === 34 && String(value).includes('SETTLED')) classes += ' status-settled';
+      if (index === 34 && String(value).includes('OUTSTANDING')) classes += ' status-outstanding';
+      return `<td data-col="${index}" class="${classes.trim()}">${displayValue(value, index)}</td>`;
+    }
+    function renderResultRow(item) {
+      if (item.kind === 'data') {
+        return `<tr class="data-row${item.remaining ? ' remaining-data' : ''}">${item.row.values.map((value, index) => renderCell(value, index)).join('')}</tr>`;
+      }
+      const cls = `summary-row ${item.summaryKind || ''}`;
+      return `<tr class="${cls}">${item.values.map((value, index) => renderCell(value, index)).join('')}</tr>`;
+    }
+    function renderResults() {
+      const result = buildResultRows();
+      $('resultsBody').innerHTML = result.output.map(renderResultRow).join('');
+      $('matchCount').textContent = `${result.matchedCount} of ${result.total}`;
+      $('matchSubtext').textContent = result.columnActive ? 'global search + column filters' : 'lots match the current search';
+      const searchText = mainSearch.value.trim() || '(column fields / all lots)';
+      const filterNote = result.columnActive ? ' · column fields are AND filters' : '';
+      $('statusLine').innerHTML = `<strong>matching ${result.matchedCount} of ${result.total} lots</strong> · search: ${escapeHtml(searchText)} · in: ${escapeHtml(searchIn.value)}${filterNote} · blank cells can be searched with BLANK`;
+      applyColumnVisibility();
+    }
+
+    function groupForColumn(index) {
+      return COLUMN_GROUPS.find((group) => group.cols.includes(index));
+    }
+    function renderOutlineRow() {
+      const parts = [];
+      let index = 0;
+      while (index < LIVE_HEADERS.length) {
+        const group = COLUMN_GROUPS.find((candidate) => candidate.cols[0] === index);
+        if (group) {
+          parts.push(`<th class="group-band" colspan="${group.cols.length}"><button class="group-toggle" data-group="${group.id}" type="button">− ${escapeHtml(group.label)}</button></th>`);
+          index += group.cols.length;
+        } else {
+          parts.push(`<th class="plain-band" colspan="1">${escapeHtml(LIVE_HEADERS[index])}</th>`);
+          index += 1;
+        }
+      }
+      $('outlineRow').innerHTML = parts.join('');
+      $('outlineTools').innerHTML = COLUMN_GROUPS.map((group) => `<button class="outline-chip" data-group="${group.id}" type="button">− ${escapeHtml(group.label)}</button>`).join('');
+    }
+    function renderFilterRow() {
+      $('filterRow').innerHTML = LIVE_HEADERS.map((header, index) => `<th data-col="${index}"><input data-filter-index="${index}" aria-label="Search ${escapeHtml(header)}" placeholder="Any / *" autocomplete="off" spellcheck="false"></th>`).join('');
+      $('filterRow').querySelectorAll('input').forEach((input) => input.addEventListener('input', (event) => {
+        filterValues[Number(event.target.dataset.filterIndex)] = event.target.value;
+        renderResults();
+      }));
+    }
+    function renderHeaderRow() {
+      $('headerRow').innerHTML = LIVE_HEADERS.map((header, index) => `<th data-col="${index}">${escapeHtml(header)}</th>`).join('');
+    }
+    function applyColumnVisibility() {
+      COLUMN_GROUPS.forEach((group) => {
+        const collapsed = collapsedGroups.has(group.id);
+        group.cols.forEach((index) => {
+          document.querySelectorAll(`[data-col="${index}"]`).forEach((element) => element.classList.toggle('hidden-col', collapsed));
+        });
+        document.querySelectorAll(`[data-group="${group.id}"]`).forEach((button) => {
+          button.textContent = `${collapsed ? '+' : '−'} ${group.label}`;
+          button.setAttribute('aria-expanded', String(!collapsed));
+        });
+      });
+    }
+    function toggleGroup(id) {
+      if (collapsedGroups.has(id)) collapsedGroups.delete(id); else collapsedGroups.add(id);
+      applyColumnVisibility();
+    }
+
+    function renderSourceView() {
+      $('sourceHeaderRow').innerHTML = SOURCE_DATA.headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('');
+      $('sourceBody').innerHTML = SOURCE_DATA.rows.map((row) => `<tr>${row.map((value) => `<td>${displayValue(value, -1, true)}</td>`).join('')}</tr>`).join('');
+    }
+    function resetFilters() {
+      mainSearch.value = '';
+      searchIn.value = 'Lot No. + Buyer + Name';
+      filterValues.fill('');
+      document.querySelectorAll('[data-filter-index]').forEach((input) => { input.value = ''; });
+      renderResults();
+    }
+
+    document.addEventListener('click', (event) => {
+      const groupButton = event.target.closest('[data-group]');
+      if (groupButton) toggleGroup(groupButton.dataset.group);
+      const tab = event.target.closest('[data-view]');
+      if (tab) {
+        document.querySelectorAll('.tab').forEach((item) => item.classList.toggle('active', item === tab));
+        document.querySelectorAll('.view').forEach((view) => view.classList.toggle('hidden', view.id !== tab.dataset.view));
+      }
+    });
+    mainSearch.addEventListener('input', renderResults);
+    searchIn.addEventListener('change', renderResults);
+    $('resetButton').addEventListener('click', resetFilters);
+
+    renderOutlineRow();
+    renderFilterRow();
+    renderHeaderRow();
+    renderSourceView();
+    renderResults();
+  </script>
+</body>
+</html>
