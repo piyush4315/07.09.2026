@@ -174,7 +174,7 @@
         <div class="column-panel-head">
           <div>
             <h2 class="section-title">Column search fields</h2>
-            <p class="section-help">Type above any header. Fields in different columns combine as ALL; comma or / inside one field means ANY.</p>
+            <p class="section-help">Type above any header. Fields in different columns combine as ALL; comma or / means ANY, while + or &amp; means ALL facets inside one field.</p>
           </div>
           <div id="outlineTools" class="outline-tools" aria-label="Column outline groups"></div>
         </div>
@@ -197,11 +197,11 @@
         </article>
         <article class="info-card">
           <h3>ALL facets</h3>
-          <p>Use <span class="token">NATIONAL + COPPER</span> or <span class="token">NATIONAL &amp; COPPER</span>. A lot must match every facet.</p>
+          <p>Use <span class="token">NATIONAL + COPPER</span> or <span class="token">NATIONAL &amp; COPPER</span>. The same ALL-facet syntax works inside every yellow column field.</p>
         </article>
         <article class="info-card">
           <h3>Find empty cells</h3>
-          <p>Enter <span class="token">BLANK</span>, <span class="token">(blank)</span>, <span class="token">EMPTY</span> or <span class="token">(empty)</span> in a search field. A completely empty field still means “ignore”.</p>
+          <p>Enter <span class="token">BLANK</span> or <span class="token">(blank)</span> in a search field. A completely empty field still means “ignore”. The word <span class="token">empty</span> remains a normal text search.</p>
         </article>
         <article class="info-card">
           <h3>Outline groups</h3>
@@ -253,7 +253,7 @@
     const NUMERIC_COLUMNS = new Set([0, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 23, 24, 26, 27, 29, 30]);
     const PERCENT_COLUMNS = new Set([17]);
     const SUM_COLUMNS = new Set([5, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 23, 24, 26, 27, 29, 30]);
-    const BLANK_TOKENS = new Set(['blank', '(blank)', 'empty', '(empty)']);
+    const BLANK_TOKENS = new Set(['blank', '(blank)']);
 
     // These outline groups mirror the final workbook's expandable column groups.
     const COLUMN_GROUPS = [
@@ -345,7 +345,8 @@
     }
     function rowMatchesColumnFilter(row, index, filter) {
       if (!String(filter ?? '').trim()) return true;
-      return splitAny(filter).some((term) => tokenMatches(term, row.values[index]));
+      const parsed = parseGlobal(filter);
+      return parsed.facets.every((facet) => facet.some((term) => tokenMatches(term, row.values[index])));
     }
     function activeColumnFilters() {
       return filterValues.some((value) => String(value).trim() !== '');
